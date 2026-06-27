@@ -122,7 +122,7 @@ Authentication is handled by Google OAuth through Auth.js. Sessions are stored i
 
 Authorization is enforced server-side close to data access:
 
-- The notes area is protected by a server-rendered layout that redirects unauthenticated users before rendering notes.
+- The notes route is protected by middleware for a better user experience, and the notes layout also redirects unauthenticated users before rendering page content.
 - Every note action calls the server-side `auth()` helper before touching Prisma.
 - Reads are filtered by the authenticated `userId`.
 - Updates and deletes use a compound `id + userId` unique selector, so knowing another note ID is not enough to mutate it.

@@ -28,8 +28,7 @@
         "./*"
       ]
     },
-    "allowSyntheticDefaultImports": true,
-    "ignoreDeprecations": "6.0"
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "next-env.d.ts",
