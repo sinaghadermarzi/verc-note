@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
+import { recordAudit } from "@/lib/audit";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   // The Prisma adapter still persists users and OAuth accounts (so notes can
@@ -27,6 +28,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.sub;
       }
       return session;
+    },
+  },
+  events: {
+    async signIn({ user, isNewUser }) {
+      await recordAudit({
+        action: isNewUser ? "auth.signup" : "auth.signin",
+        userId: user.id,
+        meta: { email: user.email },
+      });
+    },
+    async signOut(message) {
+      // Under the JWT strategy the signout event carries the token, not a
+      // session row; pull the user id from token.sub when present.
+      const userId = "token" in message ? (message.token?.sub ?? null) : null;
+      await recordAudit({ action: "auth.signout", userId });
     },
   },
 });

@@ -24,6 +24,19 @@ them scoped to your account only. Built to deploy on Vercel with zero changes.
 - Input lengths are capped; security headers are set in `next.config.mjs`.
 - The app sends `noindex` so notes never end up in search engines.
 
+## Logging & audit
+
+Two layers, written from a single call site (`src/lib/audit.ts`):
+
+- **Observability logs** (`src/lib/logger.ts`) — structured JSON to stdout,
+  captured by Vercel's function logs. Ephemeral; add a Log Drain if you need
+  retention.
+- **Audit trail** (`AuditLog` table) — durable "who did what" records for sign
+  in/up/out and note create/update/delete. Decoupled from `User` (no foreign
+  key) so it survives user deletion. Writes are best-effort and never break the
+  user action. Prune old rows when needed:
+  `delete from "AuditLog" where "createdAt" < now() - interval '90 days';`
+
 ## Local setup
 
 Requires Node 18+ (or Bun) and a PostgreSQL database.
@@ -96,6 +109,8 @@ out of the box.
 prisma/schema.prisma           Prisma models (Auth.js tables + Note)
 src/auth.ts                    NextAuth config (Google, Prisma adapter)
 src/lib/prisma.ts              PrismaClient singleton
+src/lib/logger.ts              Structured stdout logger
+src/lib/audit.ts               Audit-trail writer (log line + AuditLog row)
 src/app/api/auth/[...nextauth] Auth.js route handlers
 src/app/login/                 Google sign-in page
 src/app/notes/                 Notes list, editor, and server actions
