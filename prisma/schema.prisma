@@ -84,3 +84,17 @@ model Note {
 
   @@index([userId])
 }
+
+// Append-only audit trail. Intentionally NOT a relation to User: the log should
+// outlive the records it references (e.g. a deleted user's history), so userId
+// is a plain nullable column rather than a foreign key.
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  targetId  String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
